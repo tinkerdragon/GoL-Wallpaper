@@ -23,6 +23,7 @@ def count_neighbors(grid, i, j):
             if di == 0 and dj == 0:
                 continue
             ni, nj = i + di, j + dj
+            # Only count neighbors within the grid
             if 0 <= ni < rows and 0 <= nj < cols:
                 count += grid[ni][nj]
     return count
