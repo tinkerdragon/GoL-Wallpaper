@@ -1,7 +1,7 @@
-import subprocess
 from PIL import Image, ImageDraw
 from screeninfo import get_monitors
 import random
+import ctypes
 
 DEBUG = 0
 
@@ -56,19 +56,10 @@ def initialize_grid(rows, cols, preset='random'):
     return grid
 
 def set_wallpaper(image_file):
-    """Set the generated image as the desktop wallpaper using System Events."""
-    script = f'''
-    tell application "System Events"
-        tell every desktop
-            set picture to POSIX file "{image_file}"
-            set picture rotation to 0
-            set change interval to 0
-        end tell
-    end tell
-    '''
-    result = subprocess.run(['osascript', '-e', script], capture_output=True, text=True)
+    """Set the generated image as the desktop wallpaper on Windows."""
+    success = ctypes.windll.user32.SystemParametersInfoW(20, 0, image_file, 0x03)
     if DEBUG:
-        if result.returncode != 0:
-            print(f"Error setting wallpaper: {result.stderr}")
+        if not success:
+            print(f"Error setting wallpaper: Failed to set {image_file}")
         else:
             print(f"Set wallpaper to {image_file}")
