@@ -1,7 +1,7 @@
 import time
 import pickle
 import os
-from GoL_tools_win import get_screen_resolution, count_neighbors, create_image, initialize_grid, set_wallpaper
+from GoL_tools_win import get_screen_resolution, count_neighbors, create_image, initialize_grid, set_wallpaper, clear_directory
 
 # File to store grid state
 GRID_FILE = 'C:/Users/stanley/Desktop/GOL/game_of_life_grid.pkl'
@@ -72,15 +72,4 @@ if __name__ == "__main__":
             time.sleep(0.01)
     except KeyboardInterrupt:
         print("\nSimulation stopped.")
-        # Clean up temporary files
-        if os.path.exists(GRID_FILE):
-            os.remove(GRID_FILE)
-        # Remove all generated image files
-        i = 1
-        while True:
-            img = f'C:/Users/stanley/Desktop/GOL/game_of_life_{i}.png'
-            if os.path.exists(img):
-                os.remove(img)
-                i += 1
-            else:
-                break
+        clear_directory('C:/Users/stanley/Desktop/GOL')
