@@ -3,7 +3,7 @@ import pickle
 import os
 import subprocess
 import random
-from GoL_tools import get_screen_resolution, count_neighbors, create_image, initialize_grid, set_wallpaper
+from GoL_tools_mac import get_screen_resolution, count_neighbors, create_image, initialize_grid, set_wallpaper
 
 # File to store grid state
 GRID_FILE = '/Users/mom/Desktop/GOL/game_of_life_grid.pkl'
