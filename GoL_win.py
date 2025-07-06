@@ -4,7 +4,7 @@ import os
 from GoL_tools_mac import get_screen_resolution, count_neighbors, create_image, initialize_grid, set_wallpaper
 
 # File to store grid state
-GRID_FILE = '/Users/mom/Desktop/GOL/game_of_life_grid.pkl'
+GRID_FILE = 'C:/Users/stanley/Desktop/GOL/game_of_life_grid.pkl'
 DEBUG = 0
 
 if __name__ == "__main__":
@@ -37,7 +37,7 @@ if __name__ == "__main__":
         while True:
             gen += 1
             # Use unique filename for each generation
-            image_file = f'/Users/mom/Desktop/GOL/game_of_life_{gen}.png'
+            image_file = f'C:/Users/stanley/Desktop/GOL/game_of_life_{gen}.png'
             
             # Create and save the image for the current grid
             create_image(rows, cols, grid, image_file, cell_size, gen)
@@ -46,7 +46,7 @@ if __name__ == "__main__":
             
             # Clean up previous image to avoid clutter
             if gen > 1:
-                prev_image = f'/Users/mom/Desktop/GOL/game_of_life_{gen-1}.png'
+                prev_image = f'C:/Users/stanley/Desktop/GOL/game_of_life_{gen-1}.png'
                 if os.path.exists(prev_image):
                     os.remove(prev_image)
             
@@ -78,7 +78,7 @@ if __name__ == "__main__":
         # Remove all generated image files
         i = 1
         while True:
-            img = f'/Users/mom/Desktop/GOL/game_of_life_{i}.png'
+            img = f'C:/Users/stanley/Desktop/GOL/game_of_life_{i}.png'
             if os.path.exists(img):
                 os.remove(img)
                 i += 1
