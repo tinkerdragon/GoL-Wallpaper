@@ -1,88 +1,83 @@
-import subprocess
-from PIL import Image, ImageDraw
-from screeninfo import get_monitors
 import random
-
-DEBUG = 0
+import pickle
+import os
+import sys
+import contextlib
+import platform
+from PIL import Image, ImageDraw
 
 def get_screen_resolution():
-    """Get the primary monitor's resolution."""
-    try:
-        for monitor in get_monitors():
-            if monitor.is_primary:
-                return monitor.width, monitor.height
-        return 1920, 1080  # Fallback resolution
-    except Exception as e:
-        print(f"Error getting screen Dimensionality Reduction screen resolution: {e}")
-        return 1920, 1080  # Fallback
+    if platform.system() == 'Windows':
+        from win32api import GetSystemMetrics
+        return GetSystemMetrics(0), GetSystemMetrics(1)
+    elif platform.system() == 'Darwin':
+        from AppKit import NSScreen
+        return int(NSScreen.mainScreen().frame().size.width), int(NSScreen.mainScreen().frame().size.height)
+    else:
+        return 1920, 1080  # Default resolution
 
 def count_neighbors(rows, cols, grid, i, j):
-    """Count live neighbors for a cell at (i, j)."""
-    count = 0
+    total = 0
     for di in [-1, 0, 1]:
         for dj in [-1, 0, 1]:
             if di == 0 and dj == 0:
                 continue
-            ni, nj = i + di, j + dj
-            if 0 <= ni < rows and 0 <= nj < cols:
-                count += grid[ni][nj]
-    return count
+            r = (i + di) % rows
+            c = (j + dj) % cols
+            total += grid[r][c]
+    return total
 
-def create_image(rows, cols, grid, image_file, cell_size, gen):
-    """Create a PNG image from the grid with black and white squares."""
-    image = Image.new('RGB', (cols * cell_size, rows * cell_size), color='black')
+def create_image(rows, cols, grid, file_name, cell_size, gen):
+    width = cols * cell_size
+    height = rows * cell_size
+    image = Image.new('RGB', (width, height), 'black')
     draw = ImageDraw.Draw(image)
-    
     for i in range(rows):
         for j in range(cols):
-            x0, y0 = j * cell_size, i * cell_size
-            x1, y1 = x0 + cell_size, y0 + cell_size
-            color = (255, 255, 255) if grid[i][j] == 1 else (0, 0, 0)
-            draw.rectangle([x0, y0, x1, y1], fill=color)
-    
-    image.save(image_file)
-    if DEBUG:
-        print(f"Generated image for generation {gen}: {image_file}")
+            if grid[i][j] == 1:
+                draw.rectangle(
+                    [j * cell_size, i * cell_size, (j + 1) * cell_size - 1, (i + 1) * cell_size - 1],
+                    fill='white'
+                )
+    image.save(file_name)
 
-def initialize_grid(rows, cols, preset='random'):
-    """Initialize a grid with a preset."""
-    grid = [[0 for _ in range(cols)] for _ in range(rows)]
-    if preset == 'random':
-        grid = [[random.choice([0, 1]) for _ in range(cols)] for _ in range(rows)]
-    elif preset == 'glider':
-        pass
+def initialize_grid(rows, cols, mode='random'):
+    if mode == 'random':
+        return [[random.choice([0, 1]) for _ in range(cols)] for _ in range(rows)]
+    elif mode == 'glider':
+        grid = [[0 for _ in range(cols)] for _ in range(rows)]
+        if rows >= 3 and cols >= 3:
+            grid[1][0] = 1
+            grid[2][1] = 1
+            grid[0][2] = 1
+            grid[1][2] = 1
+            grid[2][2] = 1
+        return grid
     else:
-        pass
-    return grid
+        raise ValueError("Invalid mode: use 'random' or 'glider'")
 
-def set_wallpaper(image_file):
-    """Set the generated image as the desktop wallpaper using System Events."""
-    script = f'''
-    tell application "System Events"
-        tell every desktop
-            set picture to POSIX file "{image_file}"
-            set picture rotation to 0
-            set change interval to 0
-        end tell
-    end tell
-    '''
-    result = subprocess.run(['osascript', '-e', script], capture_output=True, text=True)
-    if DEBUG:
-        if result.returncode != 0:
-            print(f"Error setting wallpaper: {result.stderr}")
-        else:
-            print(f"Set wallpaper to {image_file}")
-
-def clear_directory(path):
-    if os.path.exists(path):
-        for item in os.listdir(path):
-            item_path = os.path.join(path, item)
-            try:
-                if os.path.isfile(item_path):
-                    os.unlink(item_path)
-                elif os.path.isdir(item_path):
-                    shutil.rmtree(item_path)
-            except Exception as e:
-                print(f"Error deleting {item_path}: {e}")
+def set_wallpaper(file_path):
+    if platform.system() == 'Windows':
+        import ctypes
+        ctypes.windll.user32.SystemParametersInfoW(20, 0, file_path, 0)
+    elif platform.system() == 'Darwin':
+        from appscript import app, mactypes
+        app('Finder').desktop_picture.set(mactypes.File(file_path))
     else:
-        print(f"Directory {path} does not exist")
+        os.system(f"gsettings set org.gnome.desktop.background picture-uri 'file://{file_path}'")
+
+def clear_directory(directory):
+    for file in os.listdir(directory):
+        file_path = os.path.join(directory, file)
+        if os.path.isfile(file_path):
+            os.remove(file_path)
+
+@contextlib.contextmanager
+def suppress_stderr():
+    original_stderr = sys.stderr
+    sys.stderr = open(os.devnull, 'w')
+    try:
+        yield
+    finally:
+        sys.stderr.close()
+        sys.stderr = original_stderr
