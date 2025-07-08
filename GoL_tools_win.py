@@ -4,6 +4,8 @@ import random
 import ctypes
 import os
 import shutil
+from scipy.signal import convolve2d
+import numpy as np
 
 DEBUG = 0
 
@@ -18,17 +20,13 @@ def get_screen_resolution():
         print(f"Error getting screen Dimensionality Reduction screen resolution: {e}")
         return 1920, 1080  # Fallback
 
-def count_neighbors(rows, cols, grid, i, j):
-    """Count live neighbors for a cell at (i, j)."""
-    count = 0
-    for di in [-1, 0, 1]:
-        for dj in [-1, 0, 1]:
-            if di == 0 and dj == 0:
-                continue
-            ni, nj = i + di, j + dj
-            if 0 <= ni < rows and 0 <= nj < cols:
-                count += grid[ni][nj]
-    return count
+def count_neighbors(grid):
+    """Count live neighbors for all cells using convolution."""
+    kernel = np.array([[1, 1, 1],
+                       [1, 0, 1],
+                       [1, 1, 1]])
+    neighbor_counts = convolve2d(np.array(grid), kernel, mode='same', boundary='wrap')
+    return np.array(neighbor_counts)
 
 def create_image(rows, cols, grid, image_file, cell_size, gen):
     """Create a PNG image from the grid with black and white squares."""
@@ -48,9 +46,9 @@ def create_image(rows, cols, grid, image_file, cell_size, gen):
 
 def initialize_grid(rows, cols, preset='random'):
     """Initialize a grid with a preset."""
-    grid = [[0 for _ in range(cols)] for _ in range(rows)]
+    grid = np.array([[0 for _ in range(cols)] for _ in range(rows)])
     if preset == 'random':
-        grid = [[random.choice([0, 1]) for _ in range(cols)] for _ in range(rows)]
+        grid = np.array([[random.choice([0, 1]) for _ in range(cols)] for _ in range(rows)])
     elif preset == 'glider':
         pass
     else:

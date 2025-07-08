@@ -2,6 +2,7 @@ import time
 import pickle
 import os
 from GoL_tools_win import get_screen_resolution, count_neighbors, create_image, initialize_grid, set_wallpaper, clear_directory
+import numpy as np
 
 # File to store grid state
 GRID_FILE = 'C:/Users/stanley/Desktop/GOL/game_of_life_grid.pkl'
@@ -51,16 +52,13 @@ if __name__ == "__main__":
                     os.remove(prev_image)
             
             # Compute the next generation
-            new_grid = [[0 for _ in range(cols)] for _ in range(rows)]
-            for i in range(rows):
-                for j in range(cols):
-                    neighbors = count_neighbors(rows, cols, grid, i, j)
-                    if grid[i][j] == 1:
-                        if neighbors == 2 or neighbors == 3:
-                            new_grid[i][j] = 1
-                    else:
-                        if neighbors == 3:
-                            new_grid[i][j] = 1
+            new_grid = np.array([[0 for _ in range(cols)] for _ in range(rows)])
+            neighbors = count_neighbors(grid)
+            grid_mask = grid == 1
+            mask2 = neighbors == 2
+            mask3 = neighbors == 3
+            new1 = (grid_mask & (mask2 | mask3)) | ((~ grid_mask) & mask3)
+            new_grid = new1 * 1
             
             # Save the new grid state
             with open(GRID_FILE, 'wb') as f:
@@ -69,7 +67,7 @@ if __name__ == "__main__":
             grid = new_grid
             if DEBUG:
                 print(f"Generation {gen}: {sum(sum(row) for row in grid)} live cells")
-            time.sleep(0.01)
+            time.sleep(1)
     except KeyboardInterrupt:
         print("\nSimulation stopped.")
-        clear_directory('C:/Users/stanley/Desktop/GOL')
+        #\clear_directory('C:/Users/stanley/Desktop/GOL')
