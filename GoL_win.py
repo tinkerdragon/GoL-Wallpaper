@@ -70,4 +70,4 @@ if __name__ == "__main__":
             time.sleep(1)
     except KeyboardInterrupt:
         print("\nSimulation stopped.")
-        #\clear_directory('C:/Users/stanley/Desktop/GOL')
+        clear_directory('C:/Users/stanley/Desktop/GOL')
